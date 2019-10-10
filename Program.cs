@@ -617,6 +617,8 @@ namespace ShareShooter
                 }
             }
 
+            // NOTE: i have a feeling that we need to encode the url first. 
+            // stdout hangs on correctly formatted urls but quickly skips over a url containing a space
             foreach (string potentialURL in potentialURLsUnique) {
                 Console.WriteLine("Potential URL: " + potentialURL);
                 try
