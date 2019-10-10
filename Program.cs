@@ -331,8 +331,8 @@ namespace ShareShooter
         // Scan the writable shares for files with web extensions
         public static void findLiveWebFiles()
         {
-            writablePaths.Add("C:\\");
-            readableShares.Add("C:\\");
+            //writablePaths.Add("C:\\");
+            //readableShares.Add("C:\\");
             List<string> validURLs = new List<string>();
             List<string> potentialURLs = new List<string>();
             string webConfig = "";
