@@ -225,7 +225,7 @@ namespace ShareShooter
         public static void GetShares(List<string> computers)
         {
 
-            
+            Console.WriteLine("\n[Scanning all shares for permissions...]");
 
 
             string[] errors = { "ERROR=53", "ERROR=5" };
@@ -278,36 +278,37 @@ namespace ShareShooter
                             }
                         }
                     }
-                    if (unreadableShares.Count > 0 || readableShares.Count > 0 || writableShares.Count > 0) 
-                    {
-                        Console.WriteLine("\n\nShares for {0}:", computer);
-                        if (unreadableShares.Count > 0)
-                        {
-                            Console.WriteLine("\n[--- Unreadable Shares ---]");
-                            foreach (string share in unreadableShares)
-                            {
-                                Console.WriteLine("\t{0}", share);
-                            }
-                        }
-                        if (readableShares.Count > 0)
-                        {
-                            Console.WriteLine("\n[--- Listable Shares ---]");
-                            foreach (string share in readableShares)
-                            {
-                                Console.WriteLine("\t{0}", share);
-                            }
-                        }
-                        if (writableShares.Count > 0)
-                        {
-                            Console.WriteLine("\n[--- Writable Shares ---]");
-                            foreach (string share in writableShares)
-                            {
-                                Console.WriteLine("\t{0}", share);
-                            }
-                        }
-                    }
+                    
                 }
             }
+
+            
+                
+            if (unreadableShares.Count > 0)
+            {
+                Console.WriteLine("\n[--- Unreadable Shares ---]");
+                foreach (string share in unreadableShares)
+                {
+                    Console.WriteLine("{0}", share);
+                }
+            }
+            if (readableShares.Count > 0)
+            {
+                Console.WriteLine("\n[--- Listable Shares ---]");
+                foreach (string share in readableShares)
+                {
+                    Console.WriteLine("{0}", share);
+                }
+            }
+            if (writableShares.Count > 0)
+            {
+                Console.WriteLine("\n[--- Writable Shares ---]");
+                foreach (string share in writableShares)
+                {
+                    Console.WriteLine("{0}", share);
+                }
+            }
+            
         }
 
         public static bool isURLExist(string url)
@@ -340,6 +341,8 @@ namespace ShareShooter
             List<string> validURLs = new List<string>();
             List<string> potentialURLs = new List<string>();
             string webConfig = "";
+
+            Console.WriteLine("\n[Searching for web.config files...]");
 
             // First lets get the web.config file(s)
             foreach(string path in readableShares)
@@ -384,9 +387,10 @@ namespace ShareShooter
 
             if (webConfig == "")
             {
-                Console.WriteLine("\nNo web.config file found. Hunting for IIS anyway...");
+                Console.WriteLine("\n[No web.config file found. Hunting for IIS anyway...]");
             } else
             {
+                Console.WriteLine("\nweb.config found:\n" + webConfig + "\n");
                 // Now lets parse out the fields:
                 // - physicalPath is the IIS root e.g.   C:\inetpub\wwwroot
                 // - bindingInformation is value like    192.168.0.1:80:www.contoso.com
@@ -453,12 +457,11 @@ namespace ShareShooter
                         }
 
                         // create into potential site and add it to websites List
-                        Console.WriteLine("applicationPaths count: " + applicationPaths.Count);
-                        Console.WriteLine("bindings count: " + bindings.Count);
-                        foreach(string binding in bindings)
+
+                        /*foreach(string binding in bindings)
                         {
                             Console.WriteLine("\tbinding: " + binding);
-                        }
+                        }*/
 
 
                         // convert bindings into actual IPs/URLs
@@ -469,7 +472,7 @@ namespace ShareShooter
                                 string[] split = binding.Split(':');
                                 goodBindings.Add(split[0]);
                                 goodBindings.Add(split[2]);
-                                Console.WriteLine("Bindings are good.");
+                                //Console.WriteLine("Bindings are good.");
                             }
                             catch (Exception) { Console.WriteLine("Problem converting *:*:* bindingInformation web.config property into ip/url"); }
                             
@@ -497,7 +500,7 @@ namespace ShareShooter
                 List<string> somewebFiles = e.ToList<string>();
                 webFiles.Concat(somewebFiles);
 
-                Console.WriteLine("Reading web.config root is good.");
+                //Console.WriteLine("Reading web.config root is good.");
 
 
             }
@@ -678,7 +681,7 @@ namespace ShareShooter
             // List default IIS paths if there's no web.config
             foreach(string path in defaultIISPaths.Distinct())
             {
-                Console.WriteLine("\nDefault IIS directory structure detected:\n" + path);
+                Console.WriteLine("\n[Default IIS directory structure detected:]\n" + path);
             }
 
 
@@ -703,7 +706,7 @@ namespace ShareShooter
                         Console.WriteLine("Valid URL: " + "http://" + potentialURL);
                     }
 
-                    Console.WriteLine("Potential URL: " + potentialURL);
+                    Console.WriteLine("DEBUG: Unreachable URL " + potentialURL);
 
                 }
                 catch (Exception) { continue; }
@@ -801,7 +804,7 @@ namespace ShareShooter
 
 
             //findLiveWebFiles();
-            Console.WriteLine("Done");
+            Console.WriteLine("\n--- Done ---\n");
             Console.ReadLine();
         }
     }
