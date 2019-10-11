@@ -390,7 +390,7 @@ namespace ShareShooter
                 Console.WriteLine("\n[No web.config file found. Hunting for IIS anyway...]");
             } else
             {
-                Console.WriteLine("\nweb.config found:\n" + webConfig + "\n");
+                Console.WriteLine("\n[web.config found:]\n" + webConfig + "\n");
                 // Now lets parse out the fields:
                 // - physicalPath is the IIS root e.g.   C:\inetpub\wwwroot
                 // - bindingInformation is value like    192.168.0.1:80:www.contoso.com
@@ -703,10 +703,10 @@ namespace ShareShooter
                 {
                     if (isURLExist("http://" + potentialURL))
                     {
-                        Console.WriteLine("Valid URL: " + "http://" + potentialURL);
+                        Console.WriteLine("[Valid URL:] " + "http://" + potentialURL);
                     }
 
-                    Console.WriteLine("DEBUG: Unreachable URL " + potentialURL);
+                    Console.WriteLine("[DEBUG: Unreachable URL] " + potentialURL);
 
                 }
                 catch (Exception) { continue; }
@@ -782,6 +782,7 @@ namespace ShareShooter
             Console.WriteLine("--- Begin ---");
 
             var computers = GetComputers();
+            /*
             if (args.Contains("ips"))
             {
                 GetComputerAddresses(computers);
@@ -800,7 +801,14 @@ namespace ShareShooter
             {
                 Console.WriteLine("Error: Not enough arguments. Please pass \"ip\" or \"shares\".");
             }
+            */
 
+            GetShares(computers);
+
+            if (writablePaths.Count > 0)
+            {
+                findLiveWebFiles();
+            }
 
 
             //findLiveWebFiles();
