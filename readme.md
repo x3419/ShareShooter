@@ -1,7 +1,7 @@
 ﻿# ShareShooter
 
    - Searches for where to place webshells on IIS
-   - .Net Assembly compatible with CS
+   - .Net Assembly compatible with CobaltStrike
    - Searches shares for IIS configs/directories and writable web files
    - Parses IIS config to determine URLs and validates accessible, writable web files
 
