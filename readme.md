@@ -11,7 +11,7 @@
 - w
 		- Show only the writable shares and then exit.
 - s 
-		- Specify a specific share to search.
+		- Specify a single share to search.
 
 - Default
 		- Search all writable shares.
