@@ -400,15 +400,8 @@ namespace ShareShooter
             return false;
         }
 
-
-        public static void findLiveWebFilesOneShare(string share)
+        public static string getWebConfig(string share)
         {
-            List<string> validURLs = new List<string>();
-            List<string> potentialURLs = new List<string>();
-            string webConfig = "";
-
-            Console.WriteLine("\n[Searching for web.config files...]");
-
             // First lets get the web.config file(s)
             try
             {
@@ -422,17 +415,22 @@ namespace ShareShooter
                 {
                     // TODO: Address this
                     // DEBUG BEHAVIOR
-                    webConfig = webConfigs[0];
+                    return webConfigs[0];
                 }
                 else if (webConfigs.Count >= 2)
                 {
                     // TODO: Address this
                     Console.WriteLine("[---DEBUG BEHAVIOR: more than one web.config file!---]");
+                    return null;
                 }
             }
-            catch (Exception) {  } // do nothing
+            catch (Exception) { return null; } // do nothing
+            return null;
+        }
 
 
+        public static IISConfig populateData(string webConfig)
+        {
             //       physicalPath,virtPath
             Dictionary<string, string> applicationPaths = new Dictionary<string, string>();
             List<string> goodBindings = new List<string>();
@@ -513,7 +511,10 @@ namespace ShareShooter
                                 goodBindings.Add(split[0]);
                                 goodBindings.Add(split[2]);
                             }
-                            catch (Exception) { Console.WriteLine("Problem converting *:*:* bindingInformation web.config property into ip/url"); }
+                            catch (Exception) {
+                                Console.WriteLine("Problem converting *:*:* bindingInformation web.config property into ip/url");
+                                return null;
+                            }
 
 
                         }
@@ -523,6 +524,7 @@ namespace ShareShooter
                 catch (Exception)
                 {
                     Console.WriteLine("Problem parsing web.config");
+                    return null;
                 }
 
                 //  populate the webFiles immediately since we know the iisRoot
@@ -531,12 +533,31 @@ namespace ShareShooter
                 List<string> somewebFiles = e.ToList<string>();
                 webFiles.Concat(somewebFiles);
 
-
+                IISConfig iisConfig = new IISConfig();
+                iisConfig.webFiles = webFiles;
+                iisConfig.goodBindings = goodBindings;
+                iisConfig.applicationPaths = applicationPaths;
+                return iisConfig;
             }
 
+            // webConfig is null;
+            return null;
+
+        }
+
+        public class IISConfig
+        {
+            public List<string> webFiles = new List<string>();
+            public List<string> goodBindings = new List<string>();
+            public Dictionary<string,string> applicationPaths = new Dictionary<string,string>();
+        }
+
+
+        public static (List<string>,List<string>) getPotentialURLs(List<string> webFiles, List<string> goodBindings, Dictionary<string, string> applicationPaths, string share, string webConfig)
+        {
             // applicationPaths and goodBindings are now populated
             List<string> defaultIISPaths = new List<string>();
-
+            List<string> potentialURLs = new List<string>();
 
             // Check non case sensitive web file extensions
             // I used the ones from this website: https://fileinfo.com/filetypes/web and remove .DLL
@@ -666,22 +687,59 @@ namespace ShareShooter
                                 }
 
                             }
-
-
-
                         }
+
+
+
                     }
+
+                    return (potentialURLs,defaultIISPaths);
 
 
 
 
                 }
 
+                return (potentialURLs, defaultIISPaths);
+
+            }
+            catch (Exception)
+            {
+                return (potentialURLs, defaultIISPaths);
+            }
+         }   
 
 
-            } catch(Exception eee) { Console.WriteLine("[Problem populating data.]"); }
+        public static void findLiveWebFilesOneShare(string share)
+        {
+            List<string> validURLs = new List<string>();
+            List<string> potentialURLs = new List<string>();
 
-            
+            Console.WriteLine("\n[Searching for web.config files...]");
+
+            string webConfig = getWebConfig(share);
+            if(webConfig == null) { webConfig = ""; }
+
+
+            // webFiles,goodBindings,applicationPaths = populateData(webConfig);
+            IISConfig iisConfig = populateData(webConfig);
+
+            if(iisConfig == null)
+            {
+                iisConfig = new IISConfig();
+            }
+
+            List<string> webFiles = iisConfig.webFiles;
+            List<string> goodBindings = iisConfig.goodBindings;
+            Dictionary<string,string> applicationPaths = iisConfig.applicationPaths;
+            List<string> defaultIISPaths = new List<string>();
+
+            //List<string> potentialURLs, List<string> defaultIISPaths = getPotentialURLs(webFiles, goodBindings, applicationPaths,share,webConfig);
+            var thing = getPotentialURLs(webFiles, goodBindings, applicationPaths, share, webConfig);
+            potentialURLs = thing.Item1;
+            defaultIISPaths = thing.Item2;
+
+
 
             // List default IIS paths if there's no web.config
             foreach (string path in defaultIISPaths.Distinct())
