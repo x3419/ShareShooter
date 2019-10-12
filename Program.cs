@@ -413,7 +413,7 @@ namespace ShareShooter
 
                 foreach(string file in Directory.GetFiles(path).ToList())
                 {
-                    if(file.EndsWith("web.config")) { files.Add(file);  }
+                    if(file.EndsWith("web.config") && !file.Contains("WinSxS")) { files.Add(file);  }
                 }
 
 
@@ -643,18 +643,64 @@ namespace ShareShooter
 
                 }
 
+                /*if(webConfig != "")
+                {
+                    foreach (string binding in goodBindings)
+                    {
+
+
+                        foreach (KeyValuePair<string, string> entry in applicationPaths)
+                        {
+
+                            // right now we're assuming physicalPath doesn't end with a \
+                            // TODO: address this
+                            string webFile = webConfig.Substring(webConfig.LastIndexOf("\\")+1, webConfig.Length - webConfig.LastIndexOf("\\")-1);
+
+                            DirectoryInfo currentDirectoryInfo = new DirectoryInfo(webFile);
+
+                            // lets walk up the file path to identify where the root of the IIS server is located
+                            for (DirectoryInfo nodeInfo = currentDirectoryInfo; nodeInfo.Parent != null; nodeInfo = nodeInfo.Parent)
+                            {
+                                try
+                                {
+                                    DirectoryInfo parentNode = nodeInfo.Parent;
+
+
+                                    // if you're within the IIS root
+                                    // NOTE: What if physicalPath="C:\inetpub\wwwroot"? Our filepaths are on a shared drive, \\asdf\jjfj$\inetpub\wwwroot != C:\inetpub\wwwroot and this check will fail.
+                                    //       Since a mount can be placed in any dir, there's no way to translate the shared drive filepath to the IIS server's local filepath....
+                                    //       I think this means that physicalPath is not a helpful web.config property and we must might be in trouble
+                                    //       Idea: take last path name e.g. wwwroot and search share drive for that folder
+
+
+                                    if (parentNode.Name.Replace("\\", "") == entry.Key.Substring(entry.Key.LastIndexOf("\\"), entry.Key.Length - entry.Key.LastIndexOf("\\")).Replace("\\", ""))
+                                    {
+                                        int parentIndex = webFile.IndexOf(parentNode.Name);
+
+                                        string potentialURL = binding + entry.Value + webFile.Substring(parentIndex + parentNode.Name.Length, webFile.Length - parentIndex - parentNode.Name.Length).Replace("\\", "/");
+                                        potentialURLs.Add(potentialURL);
+                                    }
+
+
+                                }
+                                catch (Exception ee)
+                                {
+                                    continue;
+                                }
+
+
+                            }
+
+                        }
+                    }
+
+                }*/
+
 
 
                 foreach (string webFile in webFiles)
                 {
                     Console.WriteLine("[Web file:] " + webFile);
-
-                    //DEBUG
-                    if (webFile.Contains("asdf"))
-                    {
-                        Console.WriteLine("test.html should be doing this check");
-                    }
-
 
                     // FIRST CHECK FOR URLS USING DEFAULT IIS DIRECTORY STRUCTURE
 
@@ -695,9 +741,6 @@ namespace ShareShooter
 
                                     }
                                     catch (Exception) { }// do nothing }
-
-
-
 
 
                                 }
