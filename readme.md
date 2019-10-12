@@ -15,3 +15,9 @@
 
 - Default
 		- Search all writable shares.
+
+
+## Output Summary
+- Valid URLs
+- Valid WebConfigs
+- Default IIS directories
