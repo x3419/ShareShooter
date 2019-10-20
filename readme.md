@@ -16,7 +16,7 @@
 		- Save stdout to a file
 			
 			
-			- E.g. ShareShooter.exe -o %temp%\out.txt
+		ShareShooter.exe -o %temp%\out.txt
 
 - Default
 		- Search all writable shares.
