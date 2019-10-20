@@ -1049,8 +1049,8 @@ namespace ShareShooter
             [Option('s', "share", Required = false, HelpText = "Specify a share to search.")]
             public string shootShare { get; set; }
 
-            [Option('o',"out", Required =false, HelpText = "Save stdout to a file.")]
-            public bool SaveStdOut { get; set; }
+            [Option('o',"out", Required = false, HelpText = "Save stdout to a file.")]
+            public string SaveStdOut { get; set; }
 
 
         }
@@ -1104,10 +1104,6 @@ namespace ShareShooter
             {
                 // Redirect all Console messages to the StringWriter.
                 Console.SetOut(writer);
-
-                // Log a debug message.
-                //ILog logger = LogManager.GetLogger("Unittest logger");
-                //logger.Debug("This is a debug message");
                 
             }
 
@@ -1129,7 +1125,7 @@ namespace ShareShooter
             Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
 
             PatternLayout patternLayout = new PatternLayout();
-            patternLayout.ConversionPattern = "%date [%thread] %-5level %logger - %message%newline";
+            patternLayout.ConversionPattern = "%date [%thread] - %message%newline";
             patternLayout.ActivateOptions();
 
 
@@ -1142,8 +1138,8 @@ namespace ShareShooter
 
 
 
-            log.Info("Hello console world!");
-            log.Info("Info logging");
+            //log.Info("Hello console world!");
+            //log.Info("Info logging");
 
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(o =>
@@ -1170,11 +1166,12 @@ namespace ShareShooter
                         Environment.Exit(0);
                     }
 
-                    if (o.SaveStdOut)
+                    if (o.SaveStdOut != null && o.SaveStdOut != "")
                     {
                         RollingFileAppender roller = new RollingFileAppender();
                         roller.AppendToFile = false;
-                        roller.File = @"log.txt";
+                        //roller.File = @"log.txt";
+                        roller.File = o.SaveStdOut;
                         roller.Layout = patternLayout;
                         roller.MaxSizeRollBackups = 5;
                         roller.MaximumFileSize = "1GB";
@@ -1192,7 +1189,7 @@ namespace ShareShooter
         
 
 
-            log.Info("--- Begin ---");
+            //log.Info("--- Begin ---");
 
                 var computers = GetComputers();
 
