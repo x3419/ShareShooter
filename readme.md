@@ -13,7 +13,7 @@
 - s 
 		- Specify a single share to search.
 - o
-		- Save stdout to a file
+		- Save stdout to a file with timestamps
 			
 			
 		ShareShooter.exe -o %temp%\out.txt
