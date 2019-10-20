@@ -14,6 +14,8 @@
 		- Specify a single share to search.
 - o
 		- Save stdout to a file
+			
+			
 			- E.g. ShareShooter.exe -o %temp%\out.txt
 
 - Default
