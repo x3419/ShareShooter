@@ -11,6 +11,15 @@ using System.IO;
 using System.Security.AccessControl;
 using System.Xml;
 using CommandLine;
+using System.Diagnostics;
+using log4net.Config;
+using log4net;
+using log4net.Layout;
+using log4net.Filter;
+using log4net.Core;
+using log4net.Appender;
+using log4net.Repository;
+using log4net.Repository.Hierarchy;
 
 namespace ShareShooter
 {
@@ -141,7 +150,7 @@ namespace ShareShooter
                 {
                     if (!ip.ToString().Contains(":"))
                     {
-                        Console.WriteLine("{0}: {1}", computer, ip);
+                        log.Info(computer + ": " + ip);
                     }
                 }
             }
@@ -191,7 +200,7 @@ namespace ShareShooter
             }
             else
             {
-                Console.WriteLine("ERROR: Could not get a list of Domain Controllers.");
+                log.Info("ERROR: Could not get a list of Domain Controllers.");
             }
             return computerNames;
         }
@@ -241,7 +250,7 @@ namespace ShareShooter
                 System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(path);
                 if (netnametolower != "print$" && netnametolower != "ipc$")
                 {
-                    Console.WriteLine("\\\\" + computer + "\\" + netname);
+                    log.Info("\\\\" + computer + "\\" + netname);
 
                 }
 
@@ -257,7 +266,7 @@ namespace ShareShooter
         public static void GetShares(List<string> computers)
         {
 
-            Console.WriteLine("\n[Scanning shares for permissions...]\n");
+            log.Info("\n[Scanning shares for permissions...]\n");
 
 
             string[] errors = { "ERROR=53", "ERROR=5" };
@@ -340,10 +349,10 @@ namespace ShareShooter
 
             if(writableShares.Count > 0)
             {
-                Console.WriteLine("\n[--- Writable Shares ---]");
+                log.Info("\n[--- Writable Shares ---]");
                 foreach (string share in writableShares)
                 {
-                    Console.WriteLine("{0}", share);
+                    log.Info(share);
                 }
 
             }
@@ -352,7 +361,7 @@ namespace ShareShooter
 
             if (showWritableOnly)
             {
-                Console.WriteLine("\n[---- Writable share scanning complete ----]");
+                log.Info("\n[---- Writable share scanning complete ----]");
                 // DEBUG
                 Console.ReadLine();
                 Environment.Exit(0);
@@ -360,20 +369,20 @@ namespace ShareShooter
 
             if (readableShares.Count > 0)
             {
-                Console.WriteLine("\n[--- Listable Shares ---]");
+                log.Info("\n[--- Listable Shares ---]");
                 foreach (string share in readableShares)
                 {
-                    Console.WriteLine("{0}", share);
+                    log.Info(share);
                 }
             }
 
 
             if (unreadableShares.Count > 0)
             {
-                Console.WriteLine("\n[--- Unreadable Shares ---]");
+                log.Info("\n[--- Unreadable Shares ---]");
                 foreach (string share in unreadableShares)
                 {
-                    Console.WriteLine("{0}", share);
+                    log.Info(share);
                 }
             }
 
@@ -495,7 +504,7 @@ namespace ShareShooter
 
             if (webConfig == "")
             {
-                Console.WriteLine("\n[No web.config file found. Hunting for IIS regardless...]");
+                log.Info("\n[No web.config file found. Hunting for IIS regardless...]");
             }
             else
             {
@@ -504,7 +513,7 @@ namespace ShareShooter
                 try
                 {
 
-                    Console.WriteLine("\n[web.config found:]\n" + webConfig + "\n");
+                    log.Info("\n[web.config found:]\n" + webConfig + "\n");
                     XmlDocument xmlDoc = new XmlDocument(); // Create an XML document object
                     xmlDoc.Load(webConfig); // Load the XML document from the specified file
 
@@ -575,7 +584,7 @@ namespace ShareShooter
                                 goodBindings.Add(split[2]);
                             }
                             catch (Exception) {
-                                Console.WriteLine("Problem converting *:*:* bindingInformation web.config property into ip/url");
+                                log.Info("Problem converting *:*:* bindingInformation web.config property into ip/url");
                                 return null;
                             }
 
@@ -586,7 +595,7 @@ namespace ShareShooter
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Problem parsing web.config");
+                    log.Info("Problem parsing web.config");
                     return null;
                 }
 
@@ -642,6 +651,15 @@ namespace ShareShooter
                     .ForEach(s => AddWebFiles(s, webFiles));
 
                 }
+
+                // DEBUG
+                foreach(string readableShare in readableShares)
+                {
+                    string[] files = Directory.GetFiles(readableShare, "web.config", SearchOption.AllDirectories);
+                    log.Info("Didn't crash while using Directory.GetFiles");
+                }
+                // DEBUG
+
 
                 /*if(webConfig != "")
                 {
@@ -700,7 +718,7 @@ namespace ShareShooter
 
                 foreach (string webFile in webFiles)
                 {
-                    Console.WriteLine("[Web file:] " + webFile);
+                    log.Info("[Web file:] " + webFile);
 
                     // FIRST CHECK FOR URLS USING DEFAULT IIS DIRECTORY STRUCTURE
 
@@ -831,8 +849,7 @@ namespace ShareShooter
             List<string> validURLs = new List<string>();
             //List<string> potentialURLs = new List<string>();
 
-            Console.WriteLine("\n[Searching for web.config files in " + share + "...]");
-
+            
             //string webConfig = getWebConfig(share);
             List<string> webConfigs = getWebConfig(share);
 
@@ -903,7 +920,7 @@ namespace ShareShooter
             // List default IIS paths if there's no web.config
             foreach (string path in defaultIISPaths.Distinct())
             {
-                Console.WriteLine("\n[Default IIS directory structure detected:]\n" + path);
+                log.Info("\n[Default IIS directory structure detected:]\n" + path);
                 globalDefaultIIS.Add(path);
             }
 
@@ -927,11 +944,11 @@ namespace ShareShooter
                 {
                     if (isURLExist("http://" + potentialURL))
                     {
-                        Console.WriteLine("[Valid URL:] " + "http://" + potentialURL);
+                        log.Info("[Valid URL:] " + "http://" + potentialURL);
                         globalValidURLs.Add("http://" + potentialURL);
                     }
 
-                    Console.WriteLine("[DEBUG: Unreachable URL] " + potentialURL);
+                    log.Info("[DEBUG: Unreachable URL] " + potentialURL);
 
                 }
                 catch (Exception) { continue; }
@@ -947,7 +964,7 @@ namespace ShareShooter
             List<string> potentialURLs = new List<string>();
             string webConfig = "";
 
-            Console.WriteLine("\n[Searching for web.config files...]");
+            log.Info("\n[Searching for web.config files...]");
 
             // First lets get the web.config file(s)
             foreach (string path in writablePaths)
@@ -978,7 +995,7 @@ namespace ShareShooter
                 {
                     if (s.ToUpper().EndsWith(".A4P") || s.ToUpper().EndsWith(".A5W") || s.ToUpper().EndsWith(".ADR") || s.ToUpper().EndsWith(".AEX") || s.ToUpper().EndsWith(".ALX") || s.ToUpper().EndsWith(".AN") || s.ToUpper().EndsWith(".AP") || s.ToUpper().EndsWith(".APPCACHE") || s.ToUpper().EndsWith(".ARO") || s.ToUpper().EndsWith(".ASA") || s.ToUpper().EndsWith(".ASAX") || s.ToUpper().EndsWith(".ASCX") || s.ToUpper().EndsWith(".ASHX") || s.ToUpper().EndsWith(".ASMX") || s.ToUpper().EndsWith(".ASP") || s.ToUpper().EndsWith(".ASPX") || s.ToUpper().EndsWith(".ASR") || s.ToUpper().EndsWith(".ATOM") || s.ToUpper().EndsWith(".ATT") || s.ToUpper().EndsWith(".AWM") || s.ToUpper().EndsWith(".AXD") || s.ToUpper().EndsWith(".BML") || s.ToUpper().EndsWith(".BOK") || s.ToUpper().EndsWith(".BR") || s.ToUpper().EndsWith(".BROWSER") || s.ToUpper().EndsWith(".BTAPP") || s.ToUpper().EndsWith(".BWP") || s.ToUpper().EndsWith(".CCBJS") || s.ToUpper().EndsWith(".CDF") || s.ToUpper().EndsWith(".CER") || s.ToUpper().EndsWith(".CFM") || s.ToUpper().EndsWith(".CFML") || s.ToUpper().EndsWith(".CHA") || s.ToUpper().EndsWith(".CHAT") || s.ToUpper().EndsWith(".CHM") || s.ToUpper().EndsWith(".CMS") || s.ToUpper().EndsWith(".CODASITE") || s.ToUpper().EndsWith(".COMPRESSED") || s.ToUpper().EndsWith(".CON") || s.ToUpper().EndsWith(".CPG") || s.ToUpper().EndsWith(".CPHD") || s.ToUpper().EndsWith(".CRL") || s.ToUpper().EndsWith(".CRT") || s.ToUpper().EndsWith(".CSHTML") || s.ToUpper().EndsWith(".CSP") || s.ToUpper().EndsWith(".CSR") || s.ToUpper().EndsWith(".CSS") || s.ToUpper().EndsWith(".DAP") || s.ToUpper().EndsWith(".DBM") || s.ToUpper().EndsWith(".DCR") || s.ToUpper().EndsWith(".DER") || s.ToUpper().EndsWith(".DHTML") || s.ToUpper().EndsWith(".DISCO") || s.ToUpper().EndsWith(".DISCOMAP") || s.ToUpper().EndsWith(".DML") || s.ToUpper().EndsWith(".DO") || s.ToUpper().EndsWith(".DOCHTML") || s.ToUpper().EndsWith(".DOCMHTML") || s.ToUpper().EndsWith(".DOTHTML") || s.ToUpper().EndsWith(".DOWNLOAD") || s.ToUpper().EndsWith(".DWT") || s.ToUpper().EndsWith(".ECE") || s.ToUpper().EndsWith(".EDGE") || s.ToUpper().EndsWith(".EPIBRW") || s.ToUpper().EndsWith(".ESPROJ") || s.ToUpper().EndsWith(".EWP") || s.ToUpper().EndsWith(".FCGI") || s.ToUpper().EndsWith(".FMP") || s.ToUpper().EndsWith(".FREEWAY") || s.ToUpper().EndsWith(".FWP") || s.ToUpper().EndsWith(".FWTB") || s.ToUpper().EndsWith(".FWTEMPLATE") || s.ToUpper().EndsWith(".FWTEMPLATEB") || s.ToUpper().EndsWith(".GNE") || s.ToUpper().EndsWith(".GSP") || s.ToUpper().EndsWith(".GSP") || s.ToUpper().EndsWith(".HAR") || s.ToUpper().EndsWith(".HDM") || s.ToUpper().EndsWith(".HDML") || s.ToUpper().EndsWith(".HTACCESS") || s.ToUpper().EndsWith(".HTC") || s.ToUpper().EndsWith(".HTM") || s.ToUpper().EndsWith(".HTML") || s.ToUpper().EndsWith(".HTX") || s.ToUpper().EndsWith(".HXS") || s.ToUpper().EndsWith(".HYPE") || s.ToUpper().EndsWith(".HYPERESOURCES") || s.ToUpper().EndsWith(".HYPESYMBOL") || s.ToUpper().EndsWith(".HYPETEMPLATE") || s.ToUpper().EndsWith(".IDC") || s.ToUpper().EndsWith(".IQY") || s.ToUpper().EndsWith(".ITMS") || s.ToUpper().EndsWith(".ITPC") || s.ToUpper().EndsWith(".IWDGT") || s.ToUpper().EndsWith(".JCZ") || s.ToUpper().EndsWith(".JHTML") || s.ToUpper().EndsWith(".JNLP") || s.ToUpper().EndsWith(".JS") || s.ToUpper().EndsWith(".JSON") || s.ToUpper().EndsWith(".JSP") || s.ToUpper().EndsWith(".JSPA") || s.ToUpper().EndsWith(".JSPX") || s.ToUpper().EndsWith(".JSS") || s.ToUpper().EndsWith(".JST") || s.ToUpper().EndsWith(".JVS") || s.ToUpper().EndsWith(".JWS") || s.ToUpper().EndsWith(".KIT") || s.ToUpper().EndsWith(".LASSO") || s.ToUpper().EndsWith(".LBC") || s.ToUpper().EndsWith(".LESS") || s.ToUpper().EndsWith(".MAFF") || s.ToUpper().EndsWith(".MAP") || s.ToUpper().EndsWith(".MAPX") || s.ToUpper().EndsWith(".MASTER") || s.ToUpper().EndsWith(".MHT") || s.ToUpper().EndsWith(".MHTML") || s.ToUpper().EndsWith(".MJS") || s.ToUpper().EndsWith(".MOZ") || s.ToUpper().EndsWith(".MSPX") || s.ToUpper().EndsWith(".MUSE") || s.ToUpper().EndsWith(".MVC") || s.ToUpper().EndsWith(".MVR") || s.ToUpper().EndsWith(".NOD") || s.ToUpper().EndsWith(".NXG") || s.ToUpper().EndsWith(".NZB") || s.ToUpper().EndsWith(".OAM") || s.ToUpper().EndsWith(".OBML") || s.ToUpper().EndsWith(".OBML15") || s.ToUpper().EndsWith(".OBML16") || s.ToUpper().EndsWith(".OGNC") || s.ToUpper().EndsWith(".OLP") || s.ToUpper().EndsWith(".OPML") || s.ToUpper().EndsWith(".OTH") || s.ToUpper().EndsWith(".P12") || s.ToUpper().EndsWith(".P7") || s.ToUpper().EndsWith(".P7B") || s.ToUpper().EndsWith(".P7C") || s.ToUpper().EndsWith(".PAC") || s.ToUpper().EndsWith(".PAGE") || s.ToUpper().EndsWith(".PEM") || s.ToUpper().EndsWith(".PHP") || s.ToUpper().EndsWith(".PHP2") || s.ToUpper().EndsWith(".PHP3") || s.ToUpper().EndsWith(".PHP4") || s.ToUpper().EndsWith(".PHP5") || s.ToUpper().EndsWith(".PHTM") || s.ToUpper().EndsWith(".PHTML") || s.ToUpper().EndsWith(".PPTHTML") || s.ToUpper().EndsWith(".PPTMHTML") || s.ToUpper().EndsWith(".PRF") || s.ToUpper().EndsWith(".PRO") || s.ToUpper().EndsWith(".PSP") || s.ToUpper().EndsWith(".PTW") || s.ToUpper().EndsWith(".PUB") || s.ToUpper().EndsWith(".QBO") || s.ToUpper().EndsWith(".QBX") || s.ToUpper().EndsWith(".QF") || s.ToUpper().EndsWith(".QRM") || s.ToUpper().EndsWith(".RFLW") || s.ToUpper().EndsWith(".RHTML") || s.ToUpper().EndsWith(".RJS") || s.ToUpper().EndsWith(".RSS") || s.ToUpper().EndsWith(".RT") || s.ToUpper().EndsWith(".RW3") || s.ToUpper().EndsWith(".RWP") || s.ToUpper().EndsWith(".RWSW") || s.ToUpper().EndsWith(".RWTHEME") || s.ToUpper().EndsWith(".SASS") || s.ToUpper().EndsWith(".SAVEDDECK") || s.ToUpper().EndsWith(".SCSS") || s.ToUpper().EndsWith(".SDB") || s.ToUpper().EndsWith(".SEAM") || s.ToUpper().EndsWith(".SHT") || s.ToUpper().EndsWith(".SHTM") || s.ToUpper().EndsWith(".SHTML") || s.ToUpper().EndsWith(".SITE") || s.ToUpper().EndsWith(".SITEMAP") || s.ToUpper().EndsWith(".SITES") || s.ToUpper().EndsWith(".SITES2") || s.ToUpper().EndsWith(".SPARKLE") || s.ToUpper().EndsWith(".SPC") || s.ToUpper().EndsWith(".SRF") || s.ToUpper().EndsWith(".SSP") || s.ToUpper().EndsWith(".STC") || s.ToUpper().EndsWith(".STL") || s.ToUpper().EndsWith(".STM") || s.ToUpper().EndsWith(".STML") || s.ToUpper().EndsWith(".STP") || s.ToUpper().EndsWith(".STRM") || s.ToUpper().EndsWith(".SUCK") || s.ToUpper().EndsWith(".SVC") || s.ToUpper().EndsWith(".SVR") || s.ToUpper().EndsWith(".SWZ") || s.ToUpper().EndsWith(".TPL") || s.ToUpper().EndsWith(".TVPI") || s.ToUpper().EndsWith(".TVVI") || s.ToUpper().EndsWith(".UCF") || s.ToUpper().EndsWith(".UHTML") || s.ToUpper().EndsWith(".URL") || s.ToUpper().EndsWith(".VBD") || s.ToUpper().EndsWith(".VBHTML") || s.ToUpper().EndsWith(".VDW") || s.ToUpper().EndsWith(".VLP") || s.ToUpper().EndsWith(".VRML") || s.ToUpper().EndsWith(".VRT") || s.ToUpper().EndsWith(".VSDISCO") || s.ToUpper().EndsWith(".WBS") || s.ToUpper().EndsWith(".WBXML") || s.ToUpper().EndsWith(".WDGT") || s.ToUpper().EndsWith(".WEB") || s.ToUpper().EndsWith(".WEBARCHIVE") || s.ToUpper().EndsWith(".WEBARCHIVEXML") || s.ToUpper().EndsWith(".WEBBOOKMARK") || s.ToUpper().EndsWith(".WEBHISTORY") || s.ToUpper().EndsWith(".WEBLOC") || s.ToUpper().EndsWith(".WEBSITE") || s.ToUpper().EndsWith(".WGP") || s.ToUpper().EndsWith(".WGT") || s.ToUpper().EndsWith(".WHTT") || s.ToUpper().EndsWith(".WIDGET") || s.ToUpper().EndsWith(".WML") || s.ToUpper().EndsWith(".WN") || s.ToUpper().EndsWith(".WOA") || s.ToUpper().EndsWith(".WPP") || s.ToUpper().EndsWith(".WPX") || s.ToUpper().EndsWith(".WRF") || s.ToUpper().EndsWith(".WSDL") || s.ToUpper().EndsWith(".XBEL") || s.ToUpper().EndsWith(".XBL") || s.ToUpper().EndsWith(".XFDL") || s.ToUpper().EndsWith(".XHT") || s.ToUpper().EndsWith(".XHTM") || s.ToUpper().EndsWith(".XHTML") || s.ToUpper().EndsWith(".XPD") || s.ToUpper().EndsWith(".XSS") || s.ToUpper().EndsWith(".XUL") || s.ToUpper().EndsWith(".XWS") || s.ToUpper().EndsWith(".ZFO") || s.ToUpper().EndsWith(".ZHTML") || s.ToUpper().EndsWith(".ZHTML") || s.ToUpper().EndsWith(".ZUL") || s.ToUpper().EndsWith(".ZVZ"))
                     {
-                        Console.WriteLine("wtf? " + s);
+                        log.Info("wtf? " + s);
                         alreadyFound.Add(s);
                     }
 
@@ -1032,6 +1049,9 @@ namespace ShareShooter
             [Option('s', "share", Required = false, HelpText = "Specify a share to search.")]
             public string shootShare { get; set; }
 
+            [Option('o',"out", Required =false, HelpText = "Save stdout to a file.")]
+            public bool SaveStdOut { get; set; }
+
 
         }
 
@@ -1039,83 +1059,153 @@ namespace ShareShooter
         {
             if((globalValidURLs.Count == 0) && (globalValidWebConfigs.Count == 0) && (globalDefaultIIS.Count == 0))
             {
-                Console.WriteLine("\n[---- Scanning complete. No results found. ----]\n");
+                log.Info("\n[---- Scanning complete. No results found. ----]\n");
             } else
             {
-                Console.WriteLine("\n[---- Scanning complete. Summary: ----]\n");
+                log.Info("\n[---- Scanning complete. Summary: ----]\n");
 
                 if (globalValidURLs.Count > 0)
                 {
-                    Console.WriteLine("Valid URLs: " + globalValidURLs.Distinct().ToList().Count );
-                    foreach (string url in globalValidURLs) { Console.WriteLine(url.Distinct().ToList()); }
+                    log.Info("Valid URLs: " + globalValidURLs.Distinct().ToList().Count );
+                    foreach (string url in globalValidURLs) { log.Info(url.Distinct().ToList()); }
                 }
                 if (globalValidWebConfigs.Count > 0)
                 {
-                    Console.WriteLine("\nValid WebConfigs: " + globalValidWebConfigs.Distinct().ToList().Count );
-                    foreach (string webConfig in globalValidWebConfigs.Distinct().ToList()) { Console.WriteLine(webConfig); }
+                    log.Info("\nValid WebConfigs: " + globalValidWebConfigs.Distinct().ToList().Count );
+                    foreach (string webConfig in globalValidWebConfigs.Distinct().ToList()) { log.Info(webConfig); }
                 }
                 if (globalDefaultIIS.Count > 0)
                 {
-                    Console.WriteLine("\nDefault IIS directories: " + globalDefaultIIS.Distinct().ToList().Count);
-                    foreach (string defaultIIS in globalDefaultIIS.Distinct().ToList()) { Console.WriteLine(defaultIIS); }
+                    log.Info("\nDefault IIS directories: " + globalDefaultIIS.Distinct().ToList().Count);
+                    foreach (string defaultIIS in globalDefaultIIS.Distinct().ToList()) { log.Info(defaultIIS); }
                 }
+                
             }
             
             Console.ReadLine();
         }
 
-
-
+        private static log4net.ILog log = log4net.LogManager.GetLogger
+                (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         static void Main(string[] args)
         {
 
 
+            // Save original console output writer.
+            TextWriter originalConsole = Console.Out;
 
-            Parser.Default.ParseArguments<Options>(args)
-                   .WithParsed<Options>(o =>
-                   {
-                       if (o.Verbose)
-                       {
-                           Console.WriteLine($"Verbose output enabled. Current Arguments: -v {o.Verbose}");
-                       }
+            // Configure log4net based on the App.config
+            XmlConfigurator.Configure();
+            
 
-
-                       if (o.WritableOnly)
-                       {
-                           showWritableOnly = true;
-                       }
-
-                       if(o.shootShare != null && o.shootShare != "")
-                       {
-                           findLiveWebFilesOneShare(o.shootShare);
-                           //Console.WriteLine("[---- Scanning complete ----]");
-                           showSummary();
-                           // DEBUG
-                           Console.ReadLine();
-
-                           Environment.Exit(0);
-                       }
-
-                   });
-        
-        
-
-
-        Console.WriteLine("--- Begin ---");
-
-            var computers = GetComputers();
-
-
-            GetShares(computers);
-
-            if (writablePaths.Count > 0)
+            var builder = new StringBuilder();
+            using (var writer = new StringWriter(builder))
             {
-                findLiveWebFiles();
+                // Redirect all Console messages to the StringWriter.
+                Console.SetOut(writer);
+
+                // Log a debug message.
+                //ILog logger = LogManager.GetLogger("Unittest logger");
+                //logger.Debug("This is a debug message");
+                
             }
 
-            showSummary();
+            // Get all messages written to the console.
+            string consoleOutput = string.Empty;
+            using (var reader = new StringReader(builder.ToString()))
+            {
+                consoleOutput = reader.ReadToEnd();
+            }
 
-        }
+            // Assert.
+            string expected = "This is a debug message" + Environment.NewLine;
+            
+
+            // Redirect back to original console output.
+            Console.SetOut(originalConsole);
+
+
+            Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
+
+            PatternLayout patternLayout = new PatternLayout();
+            patternLayout.ConversionPattern = "%date [%thread] %-5level %logger - %message%newline";
+            patternLayout.ActivateOptions();
+
+
+            MemoryAppender memory = new MemoryAppender();
+            memory.ActivateOptions();
+            hierarchy.Root.AddAppender(memory);
+
+            hierarchy.Root.Level = Level.Info;
+            hierarchy.Configured = true;
+
+
+
+            log.Info("Hello console world!");
+            log.Info("Info logging");
+
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(o =>
+                {
+                    if (o.Verbose)
+                    {
+                        log.Info($"Verbose output enabled. Current Arguments: -v {o.Verbose}");
+                    }
+
+
+                    if (o.WritableOnly)
+                    {
+                        showWritableOnly = true;
+                    }
+
+                    if (o.shootShare != null && o.shootShare != "")
+                    {
+                        findLiveWebFilesOneShare(o.shootShare);
+                        //log.Info("[---- Scanning complete ----]");
+                        showSummary();
+                        // DEBUG
+                        Console.ReadLine();
+
+                        Environment.Exit(0);
+                    }
+
+                    if (o.SaveStdOut)
+                    {
+                        RollingFileAppender roller = new RollingFileAppender();
+                        roller.AppendToFile = false;
+                        roller.File = @"log.txt";
+                        roller.Layout = patternLayout;
+                        roller.MaxSizeRollBackups = 5;
+                        roller.MaximumFileSize = "1GB";
+                        roller.RollingStyle = RollingFileAppender.RollingMode.Size;
+                        roller.StaticLogFileName = true;
+                        roller.ActivateOptions();
+                        hierarchy.Root.AddAppender(roller);
+                    }
+
+            });
+            
+
+                
+        
+        
+
+
+            log.Info("--- Begin ---");
+
+                var computers = GetComputers();
+
+
+                GetShares(computers);
+
+                if (writablePaths.Count > 0)
+                {
+                    findLiveWebFiles();
+                }
+
+                showSummary();
+
+            }
     }
 }
