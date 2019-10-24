@@ -265,8 +265,8 @@ namespace ShareShooter
 
         public static void GetShares(List<string> computers)
         {
-
-            log.Info("\n[Scanning shares for permissions...]\n");
+            //log.Info("asdf");
+            log.Info("[Scanning shares for permissions]");
 
 
             string[] errors = { "ERROR=53", "ERROR=5" };
@@ -361,7 +361,7 @@ namespace ShareShooter
 
             if (showWritableOnly)
             {
-                log.Info("\n[---- Writable share scanning complete ----]");
+                log.Info("[---- Writable share scanning complete ----]");
                 // DEBUG
                 Console.ReadLine();
                 Environment.Exit(0);
@@ -1085,56 +1085,90 @@ namespace ShareShooter
             Console.ReadLine();
         }
 
-        private static log4net.ILog log = log4net.LogManager.GetLogger
-                (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static log4net.ILog log;// = log4net.LogManager.GetLogger
+                //(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         static void Main(string[] args)
         {
 
-
-            // Save original console output writer.
-            TextWriter originalConsole = Console.Out;
-
-            // Configure log4net based on the App.config
-            XmlConfigurator.Configure();
-            
-
-            var builder = new StringBuilder();
-            using (var writer = new StringWriter(builder))
-            {
-                // Redirect all Console messages to the StringWriter.
-                Console.SetOut(writer);
-                
-            }
-
-            // Get all messages written to the console.
-            string consoleOutput = string.Empty;
-            using (var reader = new StringReader(builder.ToString()))
-            {
-                consoleOutput = reader.ReadToEnd();
-            }
-
-            // Assert.
-            string expected = "This is a debug message" + Environment.NewLine;
-            
-
-            // Redirect back to original console output.
-            Console.SetOut(originalConsole);
-
-
             Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
+            hierarchy.Root.RemoveAllAppenders(); /*Remove any other appenders*/
 
-            PatternLayout patternLayout = new PatternLayout();
-            patternLayout.ConversionPattern = "%date [%thread] - %message%newline";
-            patternLayout.ActivateOptions();
+            // Do this but with a ConsoleAppender
+            //FileAppender fileAppender = new FileAppender();
+            //fileAppender.AppendToFile = true;
+            //fileAppender.LockingModel = new FileAppender.MinimalLock();
+            //fileAppender.File = o.SaveStdOut;
+            //PatternLayout pl = new PatternLayout();
+            //pl.ConversionPattern = "%date [%thread] - %message%newline";
+            //pl.ActivateOptions();
+            //fileAppender.Layout = pl;
+            //fileAppender.ActivateOptions();
+            //log4net.Config.BasicConfigurator.Configure(fileAppender);
+            ConsoleAppender consoleAppender = new ConsoleAppender();
+            PatternLayout pl = new PatternLayout();
+            pl.ConversionPattern = "%message%newline";
+            pl.ActivateOptions();
+            consoleAppender.Layout = pl;
+            consoleAppender.ActivateOptions();
+            log4net.Config.BasicConfigurator.Configure(consoleAppender);
 
 
-            MemoryAppender memory = new MemoryAppender();
-            memory.ActivateOptions();
-            hierarchy.Root.AddAppender(memory);
 
-            hierarchy.Root.Level = Level.Info;
-            hierarchy.Configured = true;
+            //Test logger
+            log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            //log.Debug("Testing!");
+
+
+            //// Save original console output writer.
+            //TextWriter originalConsole = Console.Out;
+
+            //// Configure log4net based on the App.config
+            ////XmlConfigurator.Configure();
+            ////Spectrum.Logging.Logger.Setup();
+            //var tracer = new TraceAppender();
+            //var hierarchy = (Hierarchy)LogManager.GetRepository();
+            //hierarchy.Root.AddAppender(tracer);
+            //var patternLayout = new PatternLayout { ConversionPattern = "%m%n" };
+            //patternLayout.ActivateOptions();
+            //tracer.Layout = patternLayout;
+            //hierarchy.Configured = true;
+            //BasicConfigurator.Configure(hierarchy);
+
+            //var builder = new StringBuilder();
+            //using (var writer = new StringWriter(builder))
+            //{
+            //    // Redirect all Console messages to the StringWriter.
+            //    Console.SetOut(writer);
+
+            //}
+
+            //// Get all messages written to the console.
+            //string consoleOutput = string.Empty;
+            //using (var reader = new StringReader(builder.ToString()))
+            //{
+            //    consoleOutput = reader.ReadToEnd();
+            //}
+
+
+            //// Redirect back to original console output.
+            //Console.SetOut(originalConsole);
+
+
+            //Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
+
+            //PatternLayout patternLayout = new PatternLayout();
+            //patternLayout.ConversionPattern = " %message%newline";
+            //patternLayout.ActivateOptions();
+
+
+            //MemoryAppender memory = new MemoryAppender();
+            //memory.ActivateOptions();
+            ////hierarchy.Root.AddAppender(memory);
+            //log4net.Config.BasicConfigurator.Configure(memory);
+
+            //hierarchy.Root.Level = Level.Info;
+            //hierarchy.Configured = true;
 
 
 
@@ -1168,17 +1202,26 @@ namespace ShareShooter
 
                     if (o.SaveStdOut != null && o.SaveStdOut != "")
                     {
-                        RollingFileAppender roller = new RollingFileAppender();
-                        roller.AppendToFile = false;
-                        //roller.File = @"log.txt";
-                        roller.File = o.SaveStdOut;
-                        roller.Layout = patternLayout;
-                        roller.MaxSizeRollBackups = 5;
-                        roller.MaximumFileSize = "1GB";
-                        roller.RollingStyle = RollingFileAppender.RollingMode.Size;
-                        roller.StaticLogFileName = true;
-                        roller.ActivateOptions();
-                        hierarchy.Root.AddAppender(roller);
+                        FileAppender fileAppender = new FileAppender();
+                        fileAppender.AppendToFile = true;
+                        fileAppender.LockingModel = new FileAppender.MinimalLock();
+                        fileAppender.File = o.SaveStdOut;
+                        PatternLayout pl2 = new PatternLayout();
+                        pl2.ConversionPattern = "%date [%thread] - %message%newline";
+                        pl2.ActivateOptions();
+                        fileAppender.Layout = pl2;
+                        fileAppender.ActivateOptions();
+                        log4net.Config.BasicConfigurator.Configure(fileAppender);
+                        //RollingFileAppender roller = new RollingFileAppender();
+                        //roller.AppendToFile = false;
+                        //roller.File = o.SaveStdOut;
+                        ////roller.Layout = patternLayout;
+                        //roller.MaxSizeRollBackups = 5;
+                        //roller.MaximumFileSize = "1GB";
+                        //roller.RollingStyle = RollingFileAppender.RollingMode.Size;
+                        //roller.StaticLogFileName = true;
+                        //roller.ActivateOptions();
+                        //hierarchy.Root.AddAppender(roller);
                     }
 
             });
@@ -1204,5 +1247,65 @@ namespace ShareShooter
                 showSummary();
 
             }
+    }
+}
+
+namespace Spectrum.Logging
+{
+    public class Logger
+    {
+        private PatternLayout _layout = new PatternLayout();
+
+        public Logger()
+        {
+            _layout.ConversionPattern = DefaultPattern;
+            _layout.ActivateOptions();
+        }
+
+        public PatternLayout DefaultLayout
+        {
+            get { return _layout; }
+        }
+
+        public string DefaultPattern
+        {
+            get { return "message%newline"; }
+        }
+
+
+
+        public static void Setup()
+        {
+            /*Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
+
+            PatternLayout patternLayout = new PatternLayout();
+            patternLayout.ConversionPattern = "%date [%thread] - %message%newline";
+            //patternLayout.ActivateOptions();
+
+
+            //PatternLayout patternLayoutMain = new PatternLayout();
+            //patternLayoutMain.ConversionPattern = "%message%newline";
+            //patternLayoutMain.ActivateOptions();
+
+
+            RollingFileAppender roller = new RollingFileAppender();
+            roller.AppendToFile = true;
+            roller.File = @"log.txt";
+            roller.Layout = patternLayout;
+            roller.MaxSizeRollBackups = 5;
+            roller.MaximumFileSize = "1GB";
+            roller.RollingStyle = RollingFileAppender.RollingMode.Size;
+            roller.StaticLogFileName = true;
+            roller.ActivateOptions();
+            hierarchy.Root.AddAppender(roller);
+
+            //ConsoleAppender console = new ConsoleAppender();
+            //console.Layout = patternLayoutMain;
+            //console.ActivateOptions();
+            //hierarchy.Root.AddAppender(console);
+
+            hierarchy.Root.Level = Level.Debug;
+            BasicConfigurator.Configure(hierarchy);*/
+        }
     }
 }
